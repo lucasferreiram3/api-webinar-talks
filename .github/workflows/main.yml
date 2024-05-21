@@ -50,6 +50,7 @@ jobs:
           vkey: ${{ secrets.VERACODE_API_KEY }}
           file: "veracode-auto-pack-api-webinar-talks-js.zip"
           fail_build: true
+          issue_details: true
 
   sast-policy-scan:
     needs: [ package ]
