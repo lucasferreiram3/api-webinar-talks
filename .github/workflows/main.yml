@@ -25,7 +25,7 @@ jobs:
       - name: publicando artefato
         uses: actions/upload-artifact@v4
         with:
-          name: pacoteVeracode
+          name: veracode-auto-pack-api-webinar-talks-js
           path: veracode-auto-pack-api-webinar-talks-js.zip
 
   sast-pipeline_scan:
@@ -40,7 +40,7 @@ jobs:
       - name: get archive
         uses: actions/download-artifact@v3
         with:
-          name: pacoteVeracode
+          name: veracode-auto-pack-api-webinar-talks-js
 
       - name: veracode pipeline-scan
         id: pipeline-scan
@@ -63,7 +63,7 @@ jobs:
       - name: get archive
         uses: actions/download-artifact@v3
         with:
-          name: pacoteVeracode
+          name: veracode-auto-pack-api-webinar-talks-js
           
       - name: sast policy scan
         uses: veracode/veracode-uploadandscan-action@0.2.6
