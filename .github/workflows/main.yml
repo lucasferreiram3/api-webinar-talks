@@ -1,0 +1,77 @@
+
+name: security-action
+on:
+  push:
+    branches: [ dev ]
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: empacotamento
+        run: |
+          export VERACODE_API_KEY_ID=${{ secrets.VERACODE_API_ID }}
+          export VERACODE_API_KEY_SECRET=${{ secrets.VERACODE_API_KEY }}
+          
+          curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+          
+          ./veracode package --source . --type directory --trust
+
+          ls -l
+      
+      - name: publicando artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacoteVeracode
+          path: veracode-auto-pack-api-webinar-talks-js.zip
+
+  sast-pipeline_scan:
+    needs: [ package ]
+    runs-on: ubuntu-latest
+    name: sast pipeline scan
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@master
+      
+      - name: get archive
+        uses: actions/download-artifact@v3
+        with:
+          name: pacoteVeracode
+
+      - name: veracode pipeline-scan
+        id: pipeline-scan
+        uses: veracode/Veracode-pipeline-scan-action@v1.0.15
+        with:
+          vid: ${{ secrets.VERACODE_API_ID }}
+          vkey: ${{ secrets.VERACODE_API_KEY }}
+          file: "veracode-auto-pack-api-webinar-talks-js.zip"
+          fail_build: true
+
+  sast-policy-scan:
+    needs: [ package ]
+    name: sast policy scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out main branch
+        uses: actions/checkout@master
+
+      - name: get archive
+        uses: actions/download-artifact@v3
+        with:
+          name: pacoteVeracode
+          
+      - name: sast policy scan
+        uses: veracode/veracode-uploadandscan-action@0.2.6
+        with:
+          appname: 'verademo-javascript-api'
+          createprofile: false
+          filepath: 'veracode-auto-pack-api-webinar-talks-js.zip'
+          vid: '${{ secrets.VERACODE_API_ID }}'
+          vkey: '${{ secrets.VERACODE_API_KEY }}'
+          version: "${{ github.run_id }}"
+          scantimeout: 10
